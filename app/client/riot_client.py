@@ -15,4 +15,4 @@ class RiotClient(object):
         self.http_client = httpx.AsyncClient(timeout=9)
 
     async def get(self, url: str):
-        
+        pass
