@@ -18,4 +18,4 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(wallet_router, prefix="/api/v1", tags=["wallet"])
+app.include_router(wallet_router, prefix="/api/v1", tags=["player"])

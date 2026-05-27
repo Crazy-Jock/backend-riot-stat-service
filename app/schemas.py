@@ -8,12 +8,15 @@ class GetPlayerByNameResponse(BaseModel):
     gameName: str
 
 # схема для вывода данных игрока
-class PlayerFullInfoResponse(BaseModel):
+class PlayerInfoResponse(BaseModel):
     puuid: str
-    game_name: str
-    tag_line: str
-    profile_icon_id: int | None
-    summoner_lvl: int | None
+    nickname: str
+    tag: str
+    profile_icon: int | None
+    level: int | None
     region: str
 
     model_config = ConfigDict(from_attributes=True)
+
+class PlayerRankedResponse(BaseModel):
+    puuid: str

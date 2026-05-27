@@ -61,7 +61,7 @@ class RiotClient(object):
                 detail="Протух или неверный RIOT_API_KEY, требуется обновить"
             )
 
-        # проверка если данные не найдены со стороны Riot API
+        # проверка если данные не найдены со стороны Riot API (пока без обработки MATCH-V5)
         if response.status_code == 400 or response.status_code == 404:
             raise HTTPException(
                 status_code=response.status_code,

@@ -26,7 +26,7 @@ async def create_player(player_account_data: dict, player_summoner_data: dict, d
                     profile_icon_id=player_summoner_data["profileIconId"],
                     summoner_lvl=player_summoner_data["summonerLevel"],
                     region=player_summoner_data["region"],
-                    raw_json=player_account_data)
+                    raw_json=player_account_data | player_summoner_data)
     db.add(player)
     await db.commit()
     return player
