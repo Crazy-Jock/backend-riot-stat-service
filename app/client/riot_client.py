@@ -49,16 +49,23 @@ class RiotClient(object):
     # функция для GET запросов к Riot API
     async def get(self, url: str, retry_count: int = 4, backoff: int = 1) -> json:
         # трата токенов, чтобы не превысить rate limits от RIot API
-        self.short_limiter.spending_tokens()
-        self.long_limiter.spending_tokens()
+        await self.short_limiter.spending_tokens()
+        await self.long_limiter.spending_tokens()
 
         response = await self.http_client.get(url, headers={"X-Riot-Token": self.api_key})
 
         # проверка если "протух" RIOT_API_KEY
-        if response.status_code == 403:
+        if response.status_code == 403 or response.status_code == 401:
             raise HTTPException(
-                status_code=403,
-                detail="Протух RIOT_API_KEY, требуется обновить"
+                status_code=response.status_code,
+                detail="Протух или неверный RIOT_API_KEY, требуется обновить"
+            )
+
+        # проверка если данные не найдены со стороны Riot API
+        if response.status_code == 400 or response.status_code == 404:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Data not found, проверьте введенные данные"
             )
 
         # проверка если все таки превысились rate limits
@@ -70,14 +77,17 @@ class RiotClient(object):
         if response.status_code >= 500:
             # если попытки ретраить закончились, то вывести статус код и детали
             if retry_count <= 0:
-                response.raise_for_status()
+                raise HTTPException(
+                status_code=response.status_code,
+                detail="Попытки обратиться к Riot API исчерпаны"
+            )
             
             await asyncio.sleep(backoff)
 
             return await self.get(url, retry_count=retry_count - 1, backoff=backoff * 2)
 
         response.raise_for_status()
-        return await response.json()
+        return response.json()
 
 # создание единого Riot клиента для GET запросов из любого модуля
 riot_client = RiotClient(api_key=config.RIOT_API_KEY, 
