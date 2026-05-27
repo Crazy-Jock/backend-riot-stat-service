@@ -25,12 +25,6 @@
 
 Необходимо в корне репозитория создать `.env` с переменными `RIOT_API_KEY`, `USER_DB`, `PASSWORD_DB` и соответствующе присвоить им необходимые значения.<br></br>
 Создать PostgreSQL БД можно с установленным Docker и командой в CMD:  
-`docker run --name postgres-db                                                                                                                                         
- docker run --name riot-db                                                   
- -e POSTGRES_USER=user
- -e POSTGRES_PASSWORD=password
- -e POSTGRES_DB=RiotStats
- -p 5432:5432
- -d postgres:16`<br></br>
+`docker run --name postgres-db docker run --name riot-db -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=RiotStats -p 5432:5432 -d postgres:16`<br></br>
  В репозитории с проектом запустить сервер uvicorn  
  CMD `uvicorn main:app --reload`
