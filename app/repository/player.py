@@ -3,7 +3,7 @@ import json
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Player
+from app.models import Player, RankedEntry
 
 
 # получение игрока из БД по riot id (game name и tag line)
@@ -39,3 +39,13 @@ async def update_player_riot_id(puuid: str, game_name: str, tag_line: str, db: A
     player.tag_line = tag_line
     await db.commit()
     return player
+
+# получение ранга игрока из БД по puuid
+async def get_ranked(puuid: str, db: AsyncSession) -> list:
+    result = await db.execute(select(RankedEntry).where(RankedEntry.puuid == puuid))
+    ranked = result.scalars().all()
+    return ranked
+
+# создание ранга игрока в БД по puuid
+async def create_ranked(puuid: str, db: AsyncSession) -> list:
+    pass

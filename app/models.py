@@ -1,6 +1,6 @@
 import time
 
-from sqlalchemy import JSON, ForeignKey, String
+from sqlalchemy import JSON, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -25,6 +25,18 @@ class Player(Base):
 class RankedEntry(Base):
     __tablename__ = "ranked_entrys"
 
+    __table_args__ = (UniqueConstraint("puuid", "queue_type"), )
+
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    puuid: Mapped[str] = mapped_column(ForeignKey("players.puuid", ondelete="CASCADE"))
+    puuid: Mapped[str] = mapped_column(ForeignKey("players.puuid", ondelete="CASCADE"), index=True)
+    queue_type: Mapped[str] = mapped_column(String(16))
+    tier: Mapped[str] = mapped_column(String(16))
+    rank: Mapped[str] = mapped_column(String(4))
+    wins: Mapped[int]
+    looses: Mapped[int]
+    league_points: Mapped[int]
+
+    created_at: Mapped[int] = mapped_column(default=lambda: int(time.time())) # хранится, как timestamp в секундах
+    updated_at: Mapped[int] = mapped_column(default=lambda: int(time.time()))
+    raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)

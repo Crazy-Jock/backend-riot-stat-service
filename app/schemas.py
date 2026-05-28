@@ -1,12 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
 
-# возможно переделаю или удалю
-class GetPlayerByNameResponse(BaseModel):
-    puuid: str
-    tagLine: str
-    gameName: str
-
 # схема для вывода данных игрока
 class PlayerInfoResponse(BaseModel):
     puuid: str

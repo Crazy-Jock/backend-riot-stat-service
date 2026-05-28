@@ -17,4 +17,4 @@ async def get_player_by_puuid(puuid: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/player/{puuid}/ranked")
 async def get_ranked_entrys(puuid: str, db: AsyncSession = Depends(get_db)):
-    return
+    return await player_service.get_ranked_entrys(puuid, db)
