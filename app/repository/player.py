@@ -1,4 +1,5 @@
 import json
+from re import M
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,5 +48,19 @@ async def get_ranked(puuid: str, db: AsyncSession) -> list:
     return ranked
 
 # создание ранга игрока в БД по puuid
-async def create_ranked(puuid: str, db: AsyncSession) -> list:
-    return
+async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list:
+    ranked_list = []
+    for data in player_data:
+        ranked = RankedEntry(puuid=puuid,
+                            queue_type=data["queueType"],
+                            tier=data["tier"],
+                            rank=data["rank"],
+                            wins=data["wins"],
+                            looses=data["losses"],
+                            league_points=data["leaguePoints"],
+                            raw_json=data)
+        ranked_list.append(ranked)
+        db.add(ranked)
+    await db.commit()
+    return ranked_list
+    

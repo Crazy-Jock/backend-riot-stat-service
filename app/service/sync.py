@@ -31,11 +31,14 @@ class SyncService(object):
         player_summoner_data = await riot_client.get(f"https://{quote(config.PLATFORM_HOST["euw1"])}.api.riotgames.com/lol/"
                                                      f"summoner/v4/summoners/by-puuid/{puuid}")
         player_summoner_data |= {"region": config.REGIONAL_HOST["eu"]}
+        player_ranked_data = await riot_client.get(f"https://{quote(config.PLATFORM_HOST["euw1"])}.api.riotgames.com/lol/"
+                                                   f"league/v4/entries/by-puuid/{puuid}")
         
         player = await player_repository.create_player(player_account_data, player_summoner_data, db)
+        ranked = await player_repository.create_ranked(puuid, player_ranked_data, db)
 
         # словарь для хранения синхронизированных моделей из БД
-        sync_dict = {"player": player}
+        sync_dict = {"player": player, "ranked": ranked}
         return sync_dict
 
 

@@ -12,5 +12,18 @@ class PlayerInfoResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PlayerRankedEntrys(BaseModel):
+    queue: str
+    tier: str
+    division: str
+    lp: int
+    win_rate: float
+    wins: int
+    looses: int
+
 class PlayerRankedResponse(BaseModel):
     puuid: str
+    nickname: str
+    tag: str
+    profile_icon: int | None
+    rank: list[PlayerRankedEntrys]
