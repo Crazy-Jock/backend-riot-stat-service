@@ -17,9 +17,10 @@ class SyncService(object):
         player = await player_repository.get_player_by_puuid(player_account_data["puuid"], db)
         # если игрок нашелся в БД по puuid, то обновить его riot id
         if player is not None:
-            return await {"player": await player_repository.update_player_riot_id(player_account_data["puuid"], game_name, tag_line, db)}
+            player = await player_repository.update_player_riot_id(player_account_data["puuid"], game_name, tag_line, db)
+            return {"player": player}
         
-        return self.sync_player_by_puuid(player_account_data["puuid"], db, player_account_data)
+        return await self.sync_player_by_puuid(player_account_data["puuid"], db, player_account_data)
     
     # функция для синхронизации игрока по puuid при создании нового игрока в БД
     async def sync_player_by_puuid(self, puuid: str, db: AsyncSession, player_account_data=None) -> dict: # возвращается dict для использования нужных данных в других service функциях

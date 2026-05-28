@@ -42,6 +42,5 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedRespons
 
     # если не нашелся ранг игрока в БД по puuid, то производим первую синхронизацию данных
     if not ranked:
-        return
-    
-    return
+        return PlayerRankedResponse(puuid=puuid)
+    return PlayerRankedResponse(puuid=puuid)

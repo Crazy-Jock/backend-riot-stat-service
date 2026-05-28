@@ -48,4 +48,4 @@ async def get_ranked(puuid: str, db: AsyncSession) -> list:
 
 # создание ранга игрока в БД по puuid
 async def create_ranked(puuid: str, db: AsyncSession) -> list:
-    pass
+    return
