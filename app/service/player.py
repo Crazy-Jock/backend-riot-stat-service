@@ -170,7 +170,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
 
 # функция для получения матча по match_id и его игроков
 async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoResponse:
-    match = player_repository.get_match_by_match_id(match_id, db)
+    match = await player_repository.get_match_by_match_id(match_id, db)
 
     # проверяем наличие матча в БД
     if match is None:
@@ -180,10 +180,21 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
         )
     
     participant_list_schemas = []
-    participant_list = player_repository.get_participants_by_match_id(match_id, db)
+    participant_list = await player_repository.get_participants_by_match_id(match_id, db)
     for participant in participant_list:
         if match.queue_id == 420 or match.queue_id == 440:
-            participant_list_schemas.append()
+            participant_list_schemas.append(SoloqFlexParticipant(puuid=participant.puuid,
+                                                                 champion=participant.champion_name,
+                                                                 win=participant.win,
+                                                                 kills=participant.kills,
+                                                                 deaths=participant.deaths,
+                                                                 assists=participant.assists,
+                                                                 kda=round((participant.kills + 
+                                                                            participant.assists) / 
+                                                                            max(participant.deaths, 1), 2),
+                                                                 position=participant.team_position,
+                                                                 cp=participant.creep_score,
+                                                                 damage_to_champions=participant.damage))
         elif match.queue_id == 450:
             participant_list_schemas.append(AramParticipant(puuid=participant.puuid,
                                                             champion=participant.champion_name,
@@ -242,6 +253,9 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                 detail="Появился неизвестный queue_id={player_match.queue_id}"
             )
         
-    
-        
-    
+    return MatchInfoResponse(match_id=match.match_id,
+                             queue=QUEUE_MAPPING_HELPER[match.queue_id],
+                             created_at=match.game_creation,
+                             duration=match.game_duration,
+                             patch=match.patch,
+                             participants=participant_list_schemas)

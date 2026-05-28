@@ -15,11 +15,11 @@ async def get_player_by_riot_id(game_name: str, tag_line: str, db: AsyncSession 
 async def get_ranked_entrys(puuid: str, db: AsyncSession = Depends(get_db)):
     return await player_service.get_ranked_entrys(puuid, db)
 
-@router.get("player/{puuid}/matches")
+@router.get("/player/{puuid}/matches")
 async def get_matches(puuid: str, db: AsyncSession = Depends(get_db)):
     return await player_service.get_player_matches(puuid, db)
 
-@router.get("matches/{match_id}")
+@router.get("/matches/{match_id}")
 async def get_match_info(match_id: str, db: AsyncSession = Depends(get_db)):
     return await player_service.get_match_by_match_id(match_id, db)
 

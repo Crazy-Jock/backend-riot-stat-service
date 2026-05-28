@@ -102,6 +102,7 @@ class MatchInfoResponse(BaseModel):
     queue: str
     created_at: datetime
     duration: int
+    patch: str
 
     participants: list[Union[SoloqFlexParticipant, AramParticipant,
                              NormalParticipant, ClashParticipant,

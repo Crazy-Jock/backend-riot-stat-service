@@ -117,8 +117,14 @@ async def get_existing_matches_ids(matches_id_list: list[str], db: AsyncSession)
     existing_matches_id_list = result.scalars().all()
     return list(existing_matches_id_list)
 
+# функция для получения матча по match id
 async def get_match_by_match_id(match_id: int, db: AsyncSession) -> Match:
-    pass
+    result = await db.execute(select(Match).where(Match.match_id == match_id))
+    match = result.scalar_one_or_none()
+    return match
 
+# функция для получения списка игроков матча по match id
 async def get_participants_by_match_id(match_id: int, db: AsyncSession) -> list[MatchParticipant]:
-    pass
+    result = await db.execute(select(MatchParticipant).where(MatchParticipant.match_id == match_id))
+    player_matches = result.scalars().all()
+    return player_matches
