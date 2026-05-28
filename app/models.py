@@ -1,6 +1,5 @@
-import time
-
-from sqlalchemy import JSON, ForeignKey, String, UniqueConstraint
+from datetime import datetime, timezone
+from sqlalchemy import JSON, ForeignKey, String, UniqueConstraint, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -18,8 +17,8 @@ class Player(Base):
     summoner_lvl: Mapped[int | None] = mapped_column(default=None)
     region: Mapped[str] =  mapped_column(String(32))
 
-    created_at: Mapped[int] = mapped_column(default=lambda: int(time.time())) # хранится, как timestamp в секундах
-    updated_at: Mapped[int] = mapped_column(default=lambda: int(time.time()))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 class RankedEntry(Base):
@@ -37,6 +36,6 @@ class RankedEntry(Base):
     looses: Mapped[int]
     league_points: Mapped[int]
 
-    created_at: Mapped[int] = mapped_column(default=lambda: int(time.time())) # хранится, как timestamp в секундах
-    updated_at: Mapped[int] = mapped_column(default=lambda: int(time.time()))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
