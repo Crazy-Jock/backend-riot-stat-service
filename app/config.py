@@ -24,6 +24,6 @@ class Config(BaseSettings):
     @computed_field
     @property
     def database_url(self) -> str:
-        return f"postgresql+asyncpg://{self.USER_DB}:{self.PASSWORD_DB}@localhost:5432/RiotStats"
+        return f"postgresql+asyncpg://{self.USER_DB}:{self.PASSWORD_DB}@db:5432/riot_db"
 
 config = Config()

@@ -9,7 +9,6 @@ from app.api.v1.admin import router as admin_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all) # временно сделал для очистки БД при запуске
         await conn.run_sync(Base.metadata.create_all)
 
     yield

@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16
+    container_name: riot_database
+    restart: always
+    environment:
+      USER_DB: postgres
+      PASSWORD_DB: postgres
+      POSTGRES_DB: riot_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: riot_backend
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      USER_DB: postgres
+      PASSWORD_DB: postgres
+      POSTGRES_DB: riot_db
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
