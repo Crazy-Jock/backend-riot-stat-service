@@ -1,11 +1,10 @@
-from re import M
-
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository import player as player_repository
 from app.schemas import AramParticipant, ArenaParticipant, ClashParticipant, MatchInfoResponse, NormalParticipant, ParcipantMatchInfo, PlayerInfoResponse, PlayerLastMatchesResponse, PlayerRankedEntrys, PlayerRankedResponse, SoloqFlexParticipant
 from app.service.sync import sync_service
+from app.constants import QUEUE_MAPPING_HELPER
 
 
 # функция для вывода данных игрока по riot id
@@ -69,9 +68,6 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedRespons
 # функция для получения списка матчей игрока по puuid
 async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesResponse:
     player_matches_list = await player_repository.get_player_matches(puuid, db)
-    mapping_helper = {420: "SoloQ", 440: "Flex", 450: "Aram",
-                      400: "Normal", 430: "Normal", 700: "Clash",
-                      1700: "Arena"} # для облегчения формирования response модели
 
     if not player_matches_list:
         await sync_service.sync_player_matches_by_puuid(puuid, 20, db)
@@ -81,7 +77,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
     for player_match in player_matches_list:
         if player_match.queue_id == 420 or player_match.queue_id == 440:
             player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
-                                                                  queue=mapping_helper[player_match.queue_id],
+                                                                  queue=QUEUE_MAPPING_HELPER[player_match.queue_id],
                                                                   created_at=player_match.game_creation,
                                                                   duration=player_match.game_duration,
                                                                   participant=SoloqFlexParticipant(puuid=puuid,
@@ -98,7 +94,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                    damage_to_champions=player_match.damage)))
         elif player_match.queue_id == 450:
             player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
-                                                                  queue=mapping_helper[player_match.queue_id],
+                                                                  queue=QUEUE_MAPPING_HELPER[player_match.queue_id],
                                                                   created_at=player_match.game_creation,
                                                                   duration=player_match.game_duration,
                                                                   participant=AramParticipant(puuid=puuid,
@@ -110,7 +106,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                               damage_to_champions=player_match.damage)))
         elif player_match.queue_id == 400 or player_match.queue_id == 430:
             player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
-                                                                  queue=mapping_helper[player_match.queue_id],
+                                                                  queue=QUEUE_MAPPING_HELPER[player_match.queue_id],
                                                                   created_at=player_match.game_creation,
                                                                   duration=player_match.game_duration,
                                                                   participant=NormalParticipant(puuid=puuid,
@@ -129,7 +125,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                                                      60, 2))))
         elif player_match.queue_id == 700:
             player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
-                                                                  queue=mapping_helper[player_match.queue_id],
+                                                                  queue=QUEUE_MAPPING_HELPER[player_match.queue_id],
                                                                   created_at=player_match.game_creation,
                                                                   duration=player_match.game_duration,
                                                                   participant=ClashParticipant(puuid=puuid,
@@ -151,7 +147,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                damage_to_champions=player_match.damage)))
         elif player_match.queue_id == 1700:
             player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
-                                                                  queue=mapping_helper[player_match.queue_id],
+                                                                  queue=QUEUE_MAPPING_HELPER[player_match.queue_id],
                                                                   created_at=player_match.game_creation,
                                                                   duration=player_match.game_duration,
                                                                   participant=ArenaParticipant(puuid=puuid,
@@ -175,9 +171,6 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
 # функция для получения матча по match_id и его игроков
 async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoResponse:
     match = player_repository.get_match_by_match_id(match_id, db)
-    mapping_helper = {420: "SoloQ", 440: "Flex", 450: "Aram",
-                      400: "Normal", 430: "Normal", 700: "Clash",
-                      1700: "Arena"} # для облегчения формирования response модели
 
     # проверяем наличие матча в БД
     if match is None:
@@ -248,5 +241,7 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                 status_code=400,
                 detail="Появился неизвестный queue_id={player_match.queue_id}"
             )
+        
+    
         
     
