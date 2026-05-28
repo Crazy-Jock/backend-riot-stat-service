@@ -61,7 +61,7 @@ class SyncService(object):
         # слияние списков в словарь, где new_matches_id ключ для списка c данными матча
         matches_data = await asyncio.gather(*[riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
                                                               f"match/v5/matches/{match_id}") for match_id in new_matches_id])
-        
+        await player_repository.create_match(matches_data, db)
         
 
 

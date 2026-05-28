@@ -1,7 +1,7 @@
 import json
-from re import M
 
 from sqlalchemy import select
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Match, MatchParcipant, Player, RankedEntry
@@ -60,21 +60,54 @@ async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list
                             league_points=data["leaguePoints"],
                             raw_json=data)
         ranked_list.append(ranked)
-        db.add(ranked)
+
+    db.add_all(ranked_list)
     await db.commit()
+
     return ranked_list
-    
+
+# функция для получения списка матчей игрока по puuid
 async def get_player_matches(puuid: str, db: AsyncSession) -> list[MatchParcipant]:
-    result = await db.execute(select(MatchParcipant).where(MatchParcipant.puuid == puuid))
+    result = await db.execute(select(MatchParcipant).where(MatchParcipant.puuid == puuid).order_by(MatchParcipant.game_creation.desc()))
     player_matches = result.scalars().all()
     return player_matches
 
-async def create_match(match_data: dict, db: AsyncSession) -> Match:
-    pass
+# функция создания матча и создания игроков матча
+async def create_match(match_data_list: dict, db: AsyncSession) -> list[Match]:
+    match_list = []
+    parcipant_list = []
+    for match_data in match_data_list:
+        match = Match(match_id=match_data["metadata"]["matchId"],
+                      queue_id=match_data["info"]["queueId"],
+                      game_creation=datetime.fromtimestamp(match_data["info"]["gameCreation"] / 1000, tz=timezone.utc),
+                      game_duration=match_data["info"]["gameDuration"],
+                      patch=".".join(match_data["info"]["gameVersion"].split(".")[:2]),
+                      raw_json=match_data)
+        match_list.append(match)
 
-async def create_parcipant(match_id: str, parcipant_data: list, db: AsyncSession) -> MatchParcipant:
-    pass
+        for parcipant_data in match_data["info"]["participants"]:
+            parcipant = MatchParcipant(match_id=match_data["metadata"]["matchId"],
+                                       game_creation=datetime.fromtimestamp(match_data["info"]["gameCreation"] / 1000, tz=timezone.utc),
+                                       puuid=parcipant_data["puuid"],
+                                       champion_name=parcipant_data["championName"],
+                                       kills=parcipant_data["kills"],
+                                       deaths=parcipant_data["deaths"],
+                                       assists=parcipant_data["assists"],
+                                       win=parcipant_data["win"],
+                                       team_position=parcipant_data["teamPosition"],
+                                       gold=parcipant_data["goldEarned"],
+                                       creep_score=parcipant_data["totalMinionsKilled"],
+                                       damage=parcipant_data["totalDamageDealtToChampions"],
+                                       raw_json=parcipant_data)
+            parcipant_list.append(parcipant)
 
+    db.add_all(match_list)
+    db.add_all(parcipant_list)
+    await db.commit()
+
+    return match_list
+
+# функция для получения списка уже существующих match_id в БД
 async def get_existing_matches_ids(matches_id_list: list[str], db: AsyncSession) -> list[str]:
     # если вдруг попадет пустой список
     if not matches_id_list:

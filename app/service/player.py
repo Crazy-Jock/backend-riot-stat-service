@@ -71,6 +71,6 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> list:
     mapping_helper = {}
 
     if not player_matches_list:
-        await sync_service.sync_player_matches_by_puuid(puuid, 20, db)
+        await sync_service.sync_player_matches_by_puuid(puuid, 2, db)
 
-    return {"Успех": "Успех"}
+    return {"Успех": player_matches_list}
