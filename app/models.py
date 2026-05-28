@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import JSON, ForeignKey, String, UniqueConstraint, DateTime
+from sqlalchemy import JSON, ForeignKey, Integer, String, UniqueConstraint, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -33,9 +33,9 @@ class RankedEntry(Base):
     queue_type: Mapped[str] = mapped_column(String(16))
     tier: Mapped[str] = mapped_column(String(16))
     rank: Mapped[str] = mapped_column(String(4))
-    wins: Mapped[int]
-    looses: Mapped[int]
-    league_points: Mapped[int]
+    wins: Mapped[int] = mapped_column(Integer)
+    looses: Mapped[int] = mapped_column(Integer)
+    league_points: Mapped[int] = mapped_column(Integer)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
@@ -48,7 +48,7 @@ class Match(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     match_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
-    queue_id: Mapped[int]
+    queue_id: Mapped[int] = mapped_column(Integer)
     game_creation: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True) # хранится, как timestamptz
     game_duration: Mapped[int] # хранится в секундах
     patch: Mapped[str] = mapped_column(String(16))
@@ -64,15 +64,15 @@ class MatchParticipant(Base):
     match_id: Mapped[str] = mapped_column(ForeignKey("matches.match_id", ondelete="CASCADE"), index=True)
     game_creation: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True) # хранится, как timestamptz
     game_duration: Mapped[int] # хранится в секундах
-    queue_id: Mapped[int]
+    queue_id: Mapped[int] = mapped_column(Integer)
     puuid: Mapped[str] = mapped_column(index=True)
     champion_name: Mapped[str] = mapped_column(String(32))
-    kills: Mapped[int]
-    deaths: Mapped[int]
-    assists: Mapped[int]
+    kills: Mapped[int] = mapped_column(Integer)
+    deaths: Mapped[int] = mapped_column(Integer)
+    assists: Mapped[int] = mapped_column(Integer)
     win: Mapped[bool]
     team_position: Mapped[str] = mapped_column(String(16))
-    gold: Mapped[int]
-    creep_score: Mapped[int]
-    damage: Mapped[int]
+    gold: Mapped[int] = mapped_column(Integer)
+    creep_score: Mapped[int] = mapped_column(Integer)
+    damage: Mapped[int] = mapped_column(Integer)
     raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)

@@ -87,8 +87,8 @@ class ParcipantMatchInfo(BaseModel):
     duration: int
 
     participant: Union[SoloqFlexParticipant, AramParticipant,
-                     NormalParticipant, ClashParticipant,
-                     ArenaParticipant]
+                       NormalParticipant, ClashParticipant,
+                       ArenaParticipant]
 
     @field_serializer("duration")
     def serialize_duration(self, value: int) -> str:
@@ -98,4 +98,15 @@ class PlayerLastMatchesResponse(BaseModel):
     matches: list[ParcipantMatchInfo]
 
 class MatchInfoResponse(BaseModel):
-    pass
+    match_id: str
+    queue: str
+    created_at: datetime
+    duration: int
+
+    participants: list[Union[SoloqFlexParticipant, AramParticipant,
+                             NormalParticipant, ClashParticipant,
+                             ArenaParticipant]]
+    
+    @field_serializer("duration")
+    def serialize_duration(self, value: int) -> str:
+        return f"{value // 60} мин {value % 60} сек"

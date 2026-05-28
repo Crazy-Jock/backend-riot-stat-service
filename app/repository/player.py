@@ -1,5 +1,3 @@
-import json
-
 from sqlalchemy import select
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -118,3 +116,9 @@ async def get_existing_matches_ids(matches_id_list: list[str], db: AsyncSession)
     result = await db.execute(select(Match.match_id).where(Match.match_id.in_(matches_id_list)))
     existing_matches_id_list = result.scalars().all()
     return list(existing_matches_id_list)
+
+async def get_match_by_match_id(match_id: int, db: AsyncSession) -> Match:
+    pass
+
+async def get_participants_by_match_id(match_id: int, db: AsyncSession) -> list[MatchParticipant]:
+    pass

@@ -172,6 +172,81 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
 
     return PlayerLastMatchesResponse(matches=player_matches_list_schemas)
 
-
+# функция для получения матча по match_id и его игроков
 async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoResponse:
-    pass
+    match = player_repository.get_match_by_match_id(match_id, db)
+    mapping_helper = {420: "SoloQ", 440: "Flex", 450: "Aram",
+                      400: "Normal", 430: "Normal", 700: "Clash",
+                      1700: "Arena"} # для облегчения формирования response модели
+
+    # проверяем наличие матча в БД
+    if match is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Матч {match_id} не найден или не существует"
+        )
+    
+    participant_list_schemas = []
+    participant_list = player_repository.get_participants_by_match_id(match_id, db)
+    for participant in participant_list:
+        if match.queue_id == 420 or match.queue_id == 440:
+            participant_list_schemas.append()
+        elif match.queue_id == 450:
+            participant_list_schemas.append(AramParticipant(puuid=participant.puuid,
+                                                            champion=participant.champion_name,
+                                                            win=participant.win,
+                                                            kda=round((participant.kills + 
+                                                                       participant.assists) / 
+                                                                       max(participant.deaths, 1), 2),
+                                                            damage_to_champions=participant.damage))
+        elif match.queue_id == 400 or match.queue_id == 430:
+            participant_list_schemas.append(NormalParticipant(puuid=participant.puuid,
+                                                              champion=participant.champion_name,
+                                                              win=participant.win,
+                                                              kda=round((participant.kills + 
+                                                                          participant.assists) / 
+                                                                          max(participant.deaths, 1), 2),
+                                                              position=participant.team_position,
+                                                              cp_per_minute=round(participant.creep_score / 
+                                                                                  participant.game_duration * 60, 2),
+                                                              gold_per_minute=round(participant.gold / 
+                                                                                    participant.game_duration * 60, 2),
+                                                              damage_to_champions_per_minute=round(participant.damage /
+                                                                                                   participant.game_duration * 
+                                                                                                   60, 2)))
+        elif match.queue_id == 700:
+            participant_list_schemas.append(ClashParticipant(puuid=participant.puuid,
+                                                             champion=participant.champion_name,
+                                                             win=participant.win,
+                                                             kills=participant.kills,
+                                                             deaths=participant.deaths,
+                                                             assists=participant.assists,
+                                                             kda=round((participant.kills + 
+                                                                        participant.assists) / 
+                                                                        max(participant.deaths, 1), 2),
+                                                             position=participant.team_position,
+                                                             cp=participant.creep_score,
+                                                             cp_per_minute=round(participant.creep_score / 
+                                                                                 participant.game_duration * 60, 2),
+                                                              gold=participant.gold,
+                                                              gold_per_minute=round(participant.gold / 
+                                                                                    participant.game_duration * 60, 2),
+                                                              damage_to_champions=participant.damage))
+        elif match.queue_id == 1700:
+            participant_list_schemas.append(ArenaParticipant(puuid=participant.puuid,
+                                                             champion=participant.champion_name,
+                                                             win=participant.win,
+                                                             kills=participant.kills,
+                                                             deaths=participant.deaths,
+                                                             assists=participant.assists,
+                                                             kda=round((participant.kills + 
+                                                                        participant.assists) / 
+                                                                        max(participant.deaths, 1), 2),
+                                                             damage_to_champions=participant.damage))
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Появился неизвестный queue_id={player_match.queue_id}"
+            )
+        
+    
