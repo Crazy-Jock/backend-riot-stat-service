@@ -273,7 +273,21 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                              participants=participant_list_schemas)
 
 # функция для получения статистики по чемпиону по puuid игрока
-async def get_champion_stat(puuid: str, champion_name: str, db: AsyncSession):
+async def get_champion_stat(puuid: str, db: AsyncSession, champion_name: str | None = None) -> list[ChampionStatResponse]:
+    # если имя чемпиона пустое, то вывести список имеющихся чемпионов игрока и их статистику
+    if champion_name is None:
+        champions_stats_list = await player_repository.get_player_champions_stats(puuid, db)
+
+        # если матчи у игрока отсутствуют
+        if len(champions_stats_list) <= 0:
+            raise HTTPException(
+            status_code=404,
+            detail=f"Матчи игрока не найдены"
+            )
+        else:
+            return [ChampionStatResponse.model_validate(champion_stats) for champion_stats in champions_stats_list]
+    
+    champion_name = champion_name.strip()
     champion_matches_list = await player_repository.get_player_champion_matches(puuid, champion_name, db)
 
     if len(champion_matches_list) <= 0:
@@ -285,9 +299,9 @@ async def get_champion_stat(puuid: str, champion_name: str, db: AsyncSession):
     wins = sum([match.win for match in champion_matches_list])
     looses = len(champion_matches_list) - wins
 
-    return ChampionStatResponse(puuid=puuid,
-                                champion_name=champion_name,
-                                count_matches=len(champion_matches_list),
+    return [ChampionStatResponse(puuid=puuid,
+                                champion=champion_name,
+                                matches=len(champion_matches_list),
                                 wins=wins,
                                 looses=looses,
-                                winrate=round(wins / (wins + looses) * 100, 2))
+                                winrate=round(wins / (wins + looses) * 100, 2))]

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
@@ -145,3 +145,14 @@ async def get_player_champion_matches(puuid: str, champion_name: str, db: AsyncS
     result = await db.execute(select(MatchParticipant).where(MatchParticipant.puuid == puuid, MatchParticipant.champion_name.ilike(champion_name)))
     player_champion_matches = result.scalars().all()
     return player_champion_matches
+
+# функция для получения статистики по имеющимся чемпионам игрока по puuid игрока
+async def get_player_champions_stats(puuid: str, db: AsyncSession) -> list[dict]:
+    result = await db.execute(select(MatchParticipant.champion_name.label("champion"),
+                                     func.count().label("matches"),
+                                     func.count().filter(MatchParticipant.win == True).label("wins"),
+                                     func.count().filter(MatchParticipant.win == False).label("looses"),
+                                     func.round(func.count().filter(MatchParticipant.win == True) * 100 / func.count(), 2).label("winrate"))
+                              .where(MatchParticipant.puuid == puuid).group_by(MatchParticipant.champion_name))
+    
+    return result.mappings().all()

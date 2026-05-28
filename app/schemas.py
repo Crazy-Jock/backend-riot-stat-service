@@ -113,9 +113,8 @@ class MatchInfoResponse(BaseModel):
         return f"{value // 60} мин {value % 60} сек"
     
 class ChampionStatResponse(BaseModel):
-    puuid: str
-    champion_name: str
-    count_matches: int
+    champion: str
+    matches: int
     wins: int
     looses: int
     winrate: float
