@@ -13,8 +13,10 @@ async def get_player_by_riot_id(game_name: str, tag_line: str, db: AsyncSession)
 
     # если игрока не нашлось в БД по riot id, то производим первую синхронизацию данных
     if player is None:
-        player = await sync_service.sync_player_by_riot_id(game_name, tag_line, db)
-        player = player.get("player")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Игрок {game_name}#{tag_line} не найден или не существует"
+        )
     
     return PlayerInfoResponse(puuid=player.puuid,
                               nickname=player.game_name,
@@ -27,10 +29,12 @@ async def get_player_by_riot_id(game_name: str, tag_line: str, db: AsyncSession)
 async def get_player_by_puuid(puuid: str, db: AsyncSession) -> PlayerInfoResponse:
     player = await player_repository.get_player_by_puuid(puuid, db)
 
-    # если игрока не нашлось в БД по puuid, то производим первую синхронизацию данных
+    # если игрока не нашлось в БД по puuid, то ошибка
     if player is None:
-        player = await sync_service.sync_player_by_puuid(puuid, db)
-        player = player.get("player")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Игрок {puuid} не найден или не существует"
+        )
 
     return PlayerInfoResponse(puuid=player.puuid,
                               nickname=player.game_name,
@@ -46,8 +50,10 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedRespons
    
     # если не нашелся ранг игрока в БД по puuid, то производим первую синхронизацию данных
     if not ranked_list:
-        ranked_list = await sync_service.sync_player_by_puuid(puuid, db)
-        ranked_list = ranked_list.get("ranked")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Ранг игрока {puuid} не найден или игрок не существует"
+        )
     
     player = await player_repository.get_player_by_puuid(puuid, db)
 
@@ -70,7 +76,10 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
     player_matches_list = await player_repository.get_player_matches(puuid, db)
 
     if not player_matches_list:
-        await sync_service.sync_player_matches_by_puuid(puuid, 20, db)
+        raise HTTPException(
+            status_code=404,
+            detail=f"Матчи игрока {puuid} не найдены или игрок не существует"
+        )
 
     # список схем для составления финальной response схемы
     player_matches_list_schemas = []
