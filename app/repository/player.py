@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert
 
 from app.models import Match, MatchParticipant, Player, RankedEntry
 
@@ -17,18 +18,23 @@ async def get_player_by_puuid(puuid: str, db: AsyncSession) -> Player | None:
     player = result.scalar_one_or_none()
     return player
 
-# создание нового игрока в БД
-async def create_player(player_account_data: dict, player_summoner_data: dict, db: AsyncSession) -> Player:
-    player = Player(puuid=player_account_data["puuid"], 
-                    game_name=player_account_data["gameName"],
-                    tag_line=player_account_data["tagLine"],
-                    profile_icon_id=player_summoner_data["profileIconId"],
-                    summoner_lvl=player_summoner_data["summonerLevel"],
-                    region=player_summoner_data["region"],
-                    raw_json=player_account_data | player_summoner_data)
-    db.add(player)
+# создание нового игрока в БД или обновление профиля игрока в БД
+async def create_player(player_account_data: dict, player_summoner_data: dict, db: AsyncSession):
+    stmt = insert(Player).values(puuid=player_account_data["puuid"], 
+                                 game_name=player_account_data["gameName"],
+                                 tag_line=player_account_data["tagLine"],
+                                 profile_icon_id=player_summoner_data["profileIconId"],
+                                 summoner_lvl=player_summoner_data["summonerLevel"],
+                                 region=player_summoner_data["region"],
+                                 raw_json=player_account_data | player_summoner_data)
+    stmt = stmt.on_conflict_do_update(index_elements=["puuid"], set_={"game_name": player_account_data["gameName"],
+                                                                     "tag_line": player_account_data["tagLine"],
+                                                                     "profile_icon_id": player_summoner_data["profileIconId"],
+                                                                     "summoner_lvl": player_summoner_data["summonerLevel"],
+                                                                     "region": player_summoner_data["region"],
+                                                                     "raw_json": player_account_data | player_summoner_data})
+    await db.execute(stmt)
     await db.commit()
-    return player
 
 # обновление game name и tag line игрока по puuid в БД
 async def update_player_riot_id(puuid: str, game_name: str, tag_line: str, db: AsyncSession) -> Player:
@@ -45,24 +51,29 @@ async def get_ranked(puuid: str, db: AsyncSession) -> list[RankedEntry]:
     ranked = result.scalars().all()
     return ranked
 
-# создание ранга игрока в БД по puuid
-async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list[RankedEntry]:
-    ranked_list = []
+# создание ранга игрока в БД по puuid или обновление ранга игрока в БД
+async def create_ranked(puuid: str, player_data: list, db: AsyncSession):
     for data in player_data:
-        ranked = RankedEntry(puuid=puuid,
-                            queue_type=data["queueType"],
-                            tier=data["tier"],
-                            rank=data["rank"],
-                            wins=data["wins"],
-                            looses=data["losses"],
-                            league_points=data["leaguePoints"],
-                            raw_json=data)
-        ranked_list.append(ranked)
+        # при повторной синхронизации, чтобы не плодить дубли
+        stmt = insert(RankedEntry).values(puuid=puuid,
+                                          queue_type=data["queueType"],
+                                          tier=data["tier"],
+                                          rank=data["rank"],
+                                          wins=data["wins"],
+                                          looses=data["losses"],
+                                          league_points=data["leaguePoints"],
+                                          raw_json=data)
+        stmt = stmt.on_conflict_do_update(index_elements=["puuid", "queue_type"],
+                                          set_={"tier": data["tier"],
+                                               "rank": data["rank"],
+                                               "wins": data["wins"],
+                                               "looses": data["losses"],
+                                               "league_points": data["leaguePoints"],
+                                               "raw_json": data})
 
-    db.add_all(ranked_list)
+        await db.execute(stmt)
+
     await db.commit()
-
-    return ranked_list
 
 # функция для получения списка матчей игрока по puuid
 async def get_player_matches(puuid: str, db: AsyncSession) -> list[MatchParticipant]:
@@ -128,3 +139,9 @@ async def get_participants_by_match_id(match_id: int, db: AsyncSession) -> list[
     result = await db.execute(select(MatchParticipant).where(MatchParticipant.match_id == match_id))
     player_matches = result.scalars().all()
     return player_matches
+
+# функция для получения всех матчей по puuid игрока и по имени чемпиона
+async def get_player_champion_matches(puuid: str, champion_name: str, db: AsyncSession) -> list[MatchParticipant]:
+    result = await db.execute(select(MatchParticipant).where(MatchParticipant.puuid == puuid, MatchParticipant.champion_name.ilike(champion_name)))
+    player_champion_matches = result.scalars().all()
+    return player_champion_matches

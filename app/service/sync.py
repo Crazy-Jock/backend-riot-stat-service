@@ -52,6 +52,7 @@ class SyncService(object):
         player_last_matches_id = await riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
                                                        f"match/v5/matches/by-puuid/{puuid}/ids?start=0&count={count}")
 
+        # получаем все уже существующие match_id из БД, чтобы не плодить дубли и уменьшить обращения к Riot API
         existing_matches_id_list = set(await player_repository.get_existing_matches_ids(player_last_matches_id, db))
         new_matches_id = list(set(player_last_matches_id) - existing_matches_id_list)
         # слияние списков в словарь, где new_matches_id ключ для списка c данными матча

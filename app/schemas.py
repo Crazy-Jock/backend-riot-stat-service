@@ -111,3 +111,11 @@ class MatchInfoResponse(BaseModel):
     @field_serializer("duration")
     def serialize_duration(self, value: int) -> str:
         return f"{value // 60} мин {value % 60} сек"
+    
+class ChampionStatResponse(BaseModel):
+    puuid: str
+    champion_name: str
+    count_matches: int
+    wins: int
+    looses: int
+    winrate: float

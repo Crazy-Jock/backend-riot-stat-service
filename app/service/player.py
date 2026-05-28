@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository import player as player_repository
-from app.schemas import (AramParticipant, ArenaParticipant, 
+from app.schemas import (AramParticipant, ArenaParticipant, ChampionStatResponse, 
                          ClashParticipant, MatchInfoResponse, NormalParticipant, 
                          ParcipantMatchInfo, PlayerInfoResponse, PlayerLastMatchesResponse, 
                          PlayerRankedEntrys, PlayerRankedResponse, SoloqFlexParticipant)
@@ -271,3 +271,23 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                              duration=match.game_duration,
                              patch=match.patch,
                              participants=participant_list_schemas)
+
+# функция для получения статистики по чемпиону по puuid игрока
+async def get_champion_stat(puuid: str, champion_name: str, db: AsyncSession):
+    champion_matches_list = await player_repository.get_player_champion_matches(puuid, champion_name, db)
+
+    if len(champion_matches_list) <= 0:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Матчи игрока на {champion_name} не найдены или чемпион не существует"
+        )
+
+    wins = sum([match.win for match in champion_matches_list])
+    looses = len(champion_matches_list) - wins
+
+    return ChampionStatResponse(puuid=puuid,
+                                champion_name=champion_name,
+                                count_matches=len(champion_matches_list),
+                                wins=wins,
+                                looses=looses,
+                                winrate=round(wins / (wins + looses) * 100, 2))

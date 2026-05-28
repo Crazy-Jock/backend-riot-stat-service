@@ -19,6 +19,10 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession = Depends(get_db)):
 async def get_matches(puuid: str, db: AsyncSession = Depends(get_db)):
     return await player_service.get_player_matches(puuid, db)
 
+@router.get("/player/{puuid}/champion/{champion_name}")
+async def get_champion_stat(puuid: str, champion_name: str, db: AsyncSession = Depends(get_db)):
+    return await player_service.get_champion_stat(puuid, champion_name.strip(), db)
+
 @router.get("/matches/{match_id}")
 async def get_match_info(match_id: str, db: AsyncSession = Depends(get_db)):
     return await player_service.get_match_by_match_id(match_id, db)
