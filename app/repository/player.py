@@ -4,7 +4,7 @@ from re import M
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Player, RankedEntry
+from app.models import Match, MatchParcipant, Player, RankedEntry
 
 
 # получение игрока из БД по riot id (game name и tag line)
@@ -42,13 +42,13 @@ async def update_player_riot_id(puuid: str, game_name: str, tag_line: str, db: A
     return player
 
 # получение ранга игрока из БД по puuid
-async def get_ranked(puuid: str, db: AsyncSession) -> list:
+async def get_ranked(puuid: str, db: AsyncSession) -> list[RankedEntry]:
     result = await db.execute(select(RankedEntry).where(RankedEntry.puuid == puuid))
     ranked = result.scalars().all()
     return ranked
 
 # создание ранга игрока в БД по puuid
-async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list:
+async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list[RankedEntry]:
     ranked_list = []
     for data in player_data:
         ranked = RankedEntry(puuid=puuid,
@@ -64,3 +64,22 @@ async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list
     await db.commit()
     return ranked_list
     
+async def get_player_matches(puuid: str, db: AsyncSession) -> list[MatchParcipant]:
+    result = await db.execute(select(MatchParcipant).where(MatchParcipant.puuid == puuid))
+    player_matches = result.scalars().all()
+    return player_matches
+
+async def create_match(match_data: dict, db: AsyncSession) -> Match:
+    pass
+
+async def create_parcipant(match_id: str, parcipant_data: list, db: AsyncSession) -> MatchParcipant:
+    pass
+
+async def get_existing_matches_ids(matches_id_list: list[str], db: AsyncSession) -> list[str]:
+    # если вдруг попадет пустой список
+    if not matches_id_list:
+        return []
+    
+    result = await db.execute(select(Match.match_id).where(Match.match_id.in_(matches_id_list)))
+    existing_matches_id_list = result.scalars().all()
+    return list(existing_matches_id_list)

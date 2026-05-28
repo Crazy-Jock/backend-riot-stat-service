@@ -18,7 +18,8 @@ class Player(Base):
     region: Mapped[str] =  mapped_column(String(32))
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), 
+                                                 onupdate=lambda: datetime.now(timezone.utc))
     raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 class RankedEntry(Base):
@@ -37,5 +38,38 @@ class RankedEntry(Base):
     league_points: Mapped[int]
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
+                                                 onupdate=lambda: datetime.now(timezone.utc))
+    raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+class Match(Base):
+    __tablename__ = "matches"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    match_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    queue_id: Mapped[int]
+    game_creation: Mapped[datetime] = mapped_column(DateTime(timezone=True)) # хранится, как timestamptz
+    game_duration: Mapped[int] # хранится в секундах
+    patch: Mapped[str] = mapped_column(String(16))
+    raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+class MatchParcipant(Base):
+    __tablename__ = "match_participants"
+
+    __table_args__ = (UniqueConstraint("puuid", "match_id"), )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    match_id: Mapped[str] = mapped_column(ForeignKey("matches.match_id", ondelete="CASCADE"), index=True)
+    puuid: Mapped[str] = mapped_column(index=True)
+    champion_name: Mapped[str] = mapped_column(String(32))
+    kills: Mapped[int]
+    deaths: Mapped[int]
+    assists: Mapped[int]
+    win: Mapped[bool]
+    team_position: Mapped[str] = mapped_column(String(16))
+    gold: Mapped[int]
+    creep_score: Mapped[int]
+    damage: Mapped[int]
     raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)

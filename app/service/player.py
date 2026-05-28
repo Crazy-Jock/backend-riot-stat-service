@@ -39,10 +39,11 @@ async def get_player_by_puuid(puuid: str, db: AsyncSession) -> PlayerInfoRespons
                               level=player.summoner_lvl,
                               region=player.region)
 
+# функция для получения ранга игрока по puuid
 async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedResponse:
     ranked_list = await player_repository.get_ranked(puuid, db)
     mapping_helper = {"RANKED_SOLO_5x5": "soloq", "RANKED_FLEX_SR": "flex"} # для облегчения формирования response модели
-    print(ranked_list)
+   
     # если не нашелся ранг игрока в БД по puuid, то производим первую синхронизацию данных
     if not ranked_list:
         ranked_list = await sync_service.sync_player_by_puuid(puuid, db)
@@ -62,6 +63,14 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedRespons
                                     win_rate=round(rank.wins / (rank.wins + rank.looses) * 100, 2),
                                     wins=rank.wins,
                                     looses=rank.looses)
-                                    for rank in ranked_list
-                                ]
-                                )
+                                    for rank in ranked_list])
+
+# функция для получения списка матчей игрока по puuid
+async def get_player_matches(puuid: str, db: AsyncSession) -> list:
+    player_matches_list = await player_repository.get_player_matches(puuid, db)
+    mapping_helper = {}
+
+    if not player_matches_list:
+        await sync_service.sync_player_matches_by_puuid(puuid, 20, db)
+
+    return {"Успех": "Успех"}
