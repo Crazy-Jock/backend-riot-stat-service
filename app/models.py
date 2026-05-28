@@ -54,7 +54,7 @@ class Match(Base):
     patch: Mapped[str] = mapped_column(String(16))
     raw_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
-class MatchParcipant(Base):
+class MatchParticipant(Base):
     __tablename__ = "match_participants"
 
     __table_args__ = (UniqueConstraint("puuid", "match_id"), )
@@ -63,6 +63,8 @@ class MatchParcipant(Base):
 
     match_id: Mapped[str] = mapped_column(ForeignKey("matches.match_id", ondelete="CASCADE"), index=True)
     game_creation: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True) # хранится, как timestamptz
+    game_duration: Mapped[int] # хранится в секундах
+    queue_id: Mapped[int]
     puuid: Mapped[str] = mapped_column(index=True)
     champion_name: Mapped[str] = mapped_column(String(32))
     kills: Mapped[int]

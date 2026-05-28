@@ -4,7 +4,7 @@ from sqlalchemy import select
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Match, MatchParcipant, Player, RankedEntry
+from app.models import Match, MatchParticipant, Player, RankedEntry
 
 
 # получение игрока из БД по riot id (game name и tag line)
@@ -67,8 +67,8 @@ async def create_ranked(puuid: str, player_data: list, db: AsyncSession) -> list
     return ranked_list
 
 # функция для получения списка матчей игрока по puuid
-async def get_player_matches(puuid: str, db: AsyncSession) -> list[MatchParcipant]:
-    result = await db.execute(select(MatchParcipant).where(MatchParcipant.puuid == puuid).order_by(MatchParcipant.game_creation.desc()))
+async def get_player_matches(puuid: str, db: AsyncSession) -> list[MatchParticipant]:
+    result = await db.execute(select(MatchParticipant).where(MatchParticipant.puuid == puuid).order_by(MatchParticipant.game_creation.desc()))
     player_matches = result.scalars().all()
     return player_matches
 
@@ -86,8 +86,10 @@ async def create_match(match_data_list: dict, db: AsyncSession) -> list[Match]:
         match_list.append(match)
 
         for parcipant_data in match_data["info"]["participants"]:
-            parcipant = MatchParcipant(match_id=match_data["metadata"]["matchId"],
+            parcipant = MatchParticipant(match_id=match_data["metadata"]["matchId"],
                                        game_creation=datetime.fromtimestamp(match_data["info"]["gameCreation"] / 1000, tz=timezone.utc),
+                                       game_duration=match_data["info"]["gameDuration"],
+                                       queue_id=match_data["info"]["queueId"],
                                        puuid=parcipant_data["puuid"],
                                        champion_name=parcipant_data["championName"],
                                        kills=parcipant_data["kills"],
