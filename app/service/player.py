@@ -2,8 +2,10 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository import player as player_repository
-from app.schemas import AramParticipant, ArenaParticipant, ClashParticipant, MatchInfoResponse, NormalParticipant, ParcipantMatchInfo, PlayerInfoResponse, PlayerLastMatchesResponse, PlayerRankedEntrys, PlayerRankedResponse, SoloqFlexParticipant
-from app.service.sync import sync_service
+from app.schemas import (AramParticipant, ArenaParticipant, 
+                         ClashParticipant, MatchInfoResponse, NormalParticipant, 
+                         ParcipantMatchInfo, PlayerInfoResponse, PlayerLastMatchesResponse, 
+                         PlayerRankedEntrys, PlayerRankedResponse, SoloqFlexParticipant)
 from app.constants import QUEUE_MAPPING_HELPER
 
 
@@ -11,7 +13,7 @@ from app.constants import QUEUE_MAPPING_HELPER
 async def get_player_by_riot_id(game_name: str, tag_line: str, db: AsyncSession) -> PlayerInfoResponse:
     player = await player_repository.get_player_by_riot_id(game_name, tag_line, db)
 
-    # если игрока не нашлось в БД по riot id, то производим первую синхронизацию данных
+    # если игрока не нашлось в БД по riot id, то ошибка
     if player is None:
         raise HTTPException(
             status_code=404,
@@ -48,7 +50,7 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedRespons
     ranked_list = await player_repository.get_ranked(puuid, db)
     mapping_helper = {"RANKED_SOLO_5x5": "soloq", "RANKED_FLEX_SR": "flex"} # для облегчения формирования response модели
    
-    # если не нашелся ранг игрока в БД по puuid, то производим первую синхронизацию данных
+    # если не нашелся ранг игрока в БД по puuid, то ошибка
     if not ranked_list:
         raise HTTPException(
             status_code=404,
@@ -75,6 +77,7 @@ async def get_ranked_entrys(puuid: str, db: AsyncSession) -> PlayerRankedRespons
 async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesResponse:
     player_matches_list = await player_repository.get_player_matches(puuid, db)
 
+    # если не нашлись матчи игрока, то ошибка
     if not player_matches_list:
         raise HTTPException(
             status_code=404,
@@ -99,7 +102,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                               player_match.assists) / 
                                                                                                               max(player_match.deaths, 1), 2),
                                                                                                    position=player_match.team_position,
-                                                                                                   cp=player_match.creep_score,
+                                                                                                   cs=player_match.creep_score,
                                                                                                    damage_to_champions=player_match.damage)))
         elif player_match.queue_id == 450:
             player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
@@ -125,7 +128,7 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                            player_match.assists) / 
                                                                                                            max(player_match.deaths, 1), 2),
                                                                                                 position=player_match.team_position,
-                                                                                                cp_per_minute=round(player_match.creep_score / 
+                                                                                                cs_per_minute=round(player_match.creep_score / 
                                                                                                                     player_match.game_duration * 60, 2),
                                                                                                 gold_per_minute=round(player_match.gold / 
                                                                                                                       player_match.game_duration * 60, 2),
@@ -147,8 +150,8 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                           player_match.assists) / 
                                                                                                           max(player_match.deaths, 1), 2),
                                                                                                position=player_match.team_position,
-                                                                                               cp=player_match.creep_score,
-                                                                                               cp_per_minute=round(player_match.creep_score / 
+                                                                                               cs=player_match.creep_score,
+                                                                                               cs_per_minute=round(player_match.creep_score / 
                                                                                                                    player_match.game_duration * 60, 2),
                                                                                                gold=player_match.gold,
                                                                                                gold_per_minute=round(player_match.gold / 
@@ -202,7 +205,7 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                                                                             participant.assists) / 
                                                                             max(participant.deaths, 1), 2),
                                                                  position=participant.team_position,
-                                                                 cp=participant.creep_score,
+                                                                 cs=participant.creep_score,
                                                                  damage_to_champions=participant.damage))
         elif match.queue_id == 450:
             participant_list_schemas.append(AramParticipant(puuid=participant.puuid,
@@ -220,7 +223,7 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                                                                           participant.assists) / 
                                                                           max(participant.deaths, 1), 2),
                                                               position=participant.team_position,
-                                                              cp_per_minute=round(participant.creep_score / 
+                                                              cs_per_minute=round(participant.creep_score / 
                                                                                   participant.game_duration * 60, 2),
                                                               gold_per_minute=round(participant.gold / 
                                                                                     participant.game_duration * 60, 2),
@@ -238,8 +241,8 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                                                                         participant.assists) / 
                                                                         max(participant.deaths, 1), 2),
                                                              position=participant.team_position,
-                                                             cp=participant.creep_score,
-                                                             cp_per_minute=round(participant.creep_score / 
+                                                             cs=participant.creep_score,
+                                                             cs_per_minute=round(participant.creep_score / 
                                                                                  participant.game_duration * 60, 2),
                                                               gold=participant.gold,
                                                               gold_per_minute=round(participant.gold / 

@@ -46,7 +46,7 @@ class SoloqFlexParticipant(ParticipantBase):
     assists: int
     kda: float
     position: str
-    cp: int
+    cs: int
     damage_to_champions: int
 
 
@@ -57,7 +57,7 @@ class AramParticipant(ParticipantBase):
 class NormalParticipant(ParticipantBase):
     kda: float
     position: str
-    cp_per_minute: float
+    cs_per_minute: float
     gold_per_minute: float
     damage_to_champions_per_minute: float
 
@@ -67,8 +67,8 @@ class ClashParticipant(ParticipantBase):
     assists: int
     kda: float
     position: str
-    cp: int
-    cp_per_minute: float
+    cs: int
+    cs_per_minute: float
     gold: int
     gold_per_minute: float
     damage_to_champions: int

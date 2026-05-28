@@ -22,11 +22,11 @@ class SyncService(object):
             player = await player_repository.update_player_riot_id(player_account_data["puuid"], game_name, tag_line, db)
             return {"player": player}
         
-        return await self.sync_player_by_puuid(player_account_data["puuid"], db, player_account_data)
+        await self.sync_player_by_puuid(player_account_data["puuid"], db, player_account_data)
     
     # функция для синхронизации профиля игрока по puuid 
     async def sync_player_by_puuid(self, puuid: str, db: AsyncSession, player_account_data=None) -> dict: # возвращается dict для использования нужных данных в других service функциях
-        # уменьшение запросов к Riot API, если уже произошла первая синхронизация по riot id
+        # уменьшение запросов к Riot API, если уже произошла синхронизация по riot id
         if player_account_data is None:
             player_account_data = await riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/riot/"
                                                         f"account/v1/accounts/by-puuid/{puuid}")
@@ -44,12 +44,8 @@ class SyncService(object):
         matches_data = dict(zip(new_matches_id, await asyncio.gather(*[riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
                                                                                        f"match/v5/matches/{match_id}") for match_id in new_matches_id])))
         
-        player = await player_repository.create_player(player_account_data, player_summoner_data, db)
-        ranked = await player_repository.create_ranked(puuid, player_ranked_data, db)
-
-        # словарь для хранения синхронизированных моделей из БД
-        sync_dict = {"player": player, "ranked": ranked}
-        return sync_dict
+        await player_repository.create_player(player_account_data, player_summoner_data, db)
+        await player_repository.create_ranked(puuid, player_ranked_data, db)
 
     # функция для синхронизации последних n матчей игрока
     async def sync_player_matches_by_puuid(self, puuid: str, count: int, db: AsyncSession):
@@ -62,8 +58,6 @@ class SyncService(object):
         matches_data = await asyncio.gather(*[riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
                                                               f"match/v5/matches/{match_id}") for match_id in new_matches_id])
         await player_repository.create_match(matches_data, db)
-        
-
 
 
 sync_service = SyncService()
