@@ -21,3 +21,7 @@ async def sync_player_by_puuid(puuid: str, db: AsyncSession = Depends(get_db)):
 @router.get("/admin/sync/matches/by-puuid/{puuid}")
 async def sync_player_matches_by_puuid(puuid: str, count: int, db: AsyncSession = Depends(get_db)):
     return await admin_service.sync_player_matches_by_puuid(puuid, count, db)
+
+@router.get("/health")
+async def healthz():
+    return await {"status": "ok"}
