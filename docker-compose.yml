@@ -4,8 +4,8 @@ services:
     container_name: riot_database
     restart: always
     environment:
-      USER_DB: postgres
-      PASSWORD_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: riot_db
     ports:
       - "5432:5432"

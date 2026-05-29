@@ -6,8 +6,12 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN apt-get update && apt-get install -y postgresql-client
+
 COPY . .
 
-RUN mkdir -p /app/data
+RUN chmod +x /app/entrypoint.sh
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "/app/entrypoint.sh"]
+
+HEALTHCHECK CMD curl --fail http://localhost:8000/docs || exit 1

@@ -5,3 +5,5 @@ pydantic_settings==2.14.1
 SQLAlchemy==2.0.50
 asyncpg==0.31.0
 uvicorn==0.46.0
+alembic==1.18.4
+psycopg2-binary
