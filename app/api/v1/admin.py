@@ -24,4 +24,4 @@ async def sync_player_matches_by_puuid(puuid: str, count: int, db: AsyncSession 
 
 @router.get("/health")
 async def healthz():
-    return await {"status": "ok"}
+    return {"status": "ok"}
