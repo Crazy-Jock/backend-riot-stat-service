@@ -172,11 +172,23 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                           player_match.assists) / 
                                                                                                           max(player_match.deaths, 1), 2),
                                                                                                damage_to_champions=player_match.damage)))
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Появился неизвестный queue_id={player_match.queue_id}"
-            )
+        else: # если будет новый или случайный queue_id
+            player_matches_list_schemas.append(ParcipantMatchInfo(match_id=player_match.match_id,
+                                                                  queue=player_match.queue_id,
+                                                                  created_at=player_match.game_creation,
+                                                                  duration=player_match.game_duration,
+                                                                  participant=SoloqFlexParticipant(puuid=puuid,
+                                                                                                   champion=player_match.champion_name,
+                                                                                                   win=player_match.win,
+                                                                                                   kills=player_match.kills,
+                                                                                                   deaths=player_match.deaths,
+                                                                                                   assists=player_match.assists,
+                                                                                                   kda=round((player_match.kills + 
+                                                                                                              player_match.assists) / 
+                                                                                                              max(player_match.deaths, 1), 2),
+                                                                                                   position=player_match.team_position,
+                                                                                                   cs=player_match.creep_score,
+                                                                                                   damage_to_champions=player_match.damage)))
 
     return PlayerLastMatchesResponse(matches=player_matches_list_schemas)
 
@@ -260,13 +272,21 @@ async def get_match_by_match_id(match_id: int, db: AsyncSession) -> MatchInfoRes
                                                                         max(participant.deaths, 1), 2),
                                                              damage_to_champions=participant.damage))
         else:
-            raise HTTPException(
-                status_code=400,
-                detail="Появился неизвестный queue_id={player_match.queue_id}"
-            )
+            participant_list_schemas.append(SoloqFlexParticipant(puuid=participant.puuid,
+                                                                 champion=participant.champion_name,
+                                                                 win=participant.win,
+                                                                 kills=participant.kills,
+                                                                 deaths=participant.deaths,
+                                                                 assists=participant.assists,
+                                                                 kda=round((participant.kills + 
+                                                                            participant.assists) / 
+                                                                            max(participant.deaths, 1), 2),
+                                                                 position=participant.team_position,
+                                                                 cs=participant.creep_score,
+                                                                 damage_to_champions=participant.damage))
         
     return MatchInfoResponse(match_id=match.match_id,
-                             queue=QUEUE_MAPPING_HELPER[match.queue_id],
+                             queue=QUEUE_MAPPING_HELPER.get(match.queue_id, match.queue_id),
                              created_at=match.game_creation,
                              duration=match.game_duration,
                              patch=match.patch,
