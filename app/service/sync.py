@@ -35,14 +35,6 @@ class SyncService(object):
         player_summoner_data |= {"region": config.REGIONAL_HOST["eu"]}
         player_ranked_data = await riot_client.get(f"https://{quote(config.PLATFORM_HOST["euw1"])}.api.riotgames.com/lol/"
                                                    f"league/v4/entries/by-puuid/{puuid}")
-        player_matches_id = await riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
-                                                   f"match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20")
-
-        existing_matches_id_list = set(await player_repository.get_existing_matches_ids(player_matches_id, db))
-        new_matches_id = list(set(player_matches_id) - existing_matches_id_list)
-        # слияние списков в словарь, где new_matches_id ключ для списка c данными матча
-        matches_data = dict(zip(new_matches_id, await asyncio.gather(*[riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
-                                                                                       f"match/v5/matches/{match_id}") for match_id in new_matches_id])))
         
         await player_repository.create_player(player_account_data, player_summoner_data, db)
         await player_repository.create_ranked(puuid, player_ranked_data, db)
