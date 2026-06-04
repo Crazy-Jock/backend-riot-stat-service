@@ -16,6 +16,8 @@ class Player(Base):
     profile_icon_id: Mapped[int | None] = mapped_column(default=None)
     summoner_lvl: Mapped[int | None] = mapped_column(default=None)
     region: Mapped[str] =  mapped_column(String(32))
+    count_matches: Mapped[int] = mapped_column(Integer)
+    backfill_complete: Mapped[bool] = mapped_column(default=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), 

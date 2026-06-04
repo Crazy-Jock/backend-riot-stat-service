@@ -20,19 +20,22 @@ async def get_player_by_puuid(puuid: str, db: AsyncSession) -> Player | None:
 
 # создание нового игрока в БД или обновление профиля игрока в БД
 async def create_player(player_account_data: dict, player_summoner_data: dict, db: AsyncSession):
+    count_matches = (await db.execute(select(func.count(MatchParticipant.puuid)).where(MatchParticipant.puuid == player_account_data["puuid"]))).scalar()
     stmt = insert(Player).values(puuid=player_account_data["puuid"], 
                                  game_name=player_account_data["gameName"],
                                  tag_line=player_account_data["tagLine"],
                                  profile_icon_id=player_summoner_data["profileIconId"],
                                  summoner_lvl=player_summoner_data["summonerLevel"],
                                  region=player_summoner_data["region"],
-                                 raw_json=player_account_data | player_summoner_data)
+                                 raw_json=player_account_data | player_summoner_data,
+                                 count_matches=count_matches)
     stmt = stmt.on_conflict_do_update(index_elements=["puuid"], set_={"game_name": player_account_data["gameName"],
                                                                      "tag_line": player_account_data["tagLine"],
                                                                      "profile_icon_id": player_summoner_data["profileIconId"],
                                                                      "summoner_lvl": player_summoner_data["summonerLevel"],
                                                                      "region": player_summoner_data["region"],
-                                                                     "raw_json": player_account_data | player_summoner_data})
+                                                                     "raw_json": player_account_data | player_summoner_data,
+                                                                     "count_matches": count_matches})
     await db.execute(stmt)
     await db.commit()
 

@@ -1,8 +1,8 @@
-"""auto
+"""update players table
 
-Revision ID: 8a44b25057c3
+Revision ID: b6a287ae15dd
 Revises: 
-Create Date: 2026-05-29 03:05:47.616262
+Create Date: 2026-06-04 17:25:01.950516
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8a44b25057c3'
+revision: str = 'b6a287ae15dd'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -41,6 +41,8 @@ def upgrade() -> None:
     sa.Column('profile_icon_id', sa.Integer(), nullable=True),
     sa.Column('summoner_lvl', sa.Integer(), nullable=True),
     sa.Column('region', sa.String(length=32), nullable=False),
+    sa.Column('count_matches', sa.Integer(), nullable=False),
+    sa.Column('backfill_complete', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('raw_json', sa.JSON(), nullable=True),
