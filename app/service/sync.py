@@ -60,7 +60,7 @@ class SyncService(object):
         
         player.count_matches += len(new_matches_id)
         # запись нового свежего id матча после первой синхронизации свежих count матчей
-        if player.last_fresh_match_id in player_last_matches_id:
+        if player.last_fresh_match_id in player_last_matches_id or player.last_fresh_match_id is None:
             player.last_fresh_match_id = fresh_match_id
 
         step = 1
@@ -85,7 +85,7 @@ class SyncService(object):
         # backfill заполнение, когда был найден last_fresh_match_id среди свежих матчей
         while new_matches_remaining > 0 and not(player.backfill_complete):
             player_last_matches_id = await riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"
-                                                           f"match/v5/matches/by-puuid/{puuid}/ids?start={count * step}&count={count}")
+                                                           f"match/v5/matches/by-puuid/{puuid}/ids?start={player.count_matches}&count={count}")
             existing_matches_id_list = set(await player_repository.get_existing_matches_ids(player_last_matches_id, db))
             new_matches_id = [match_id for match_id in player_last_matches_id if match_id not in existing_matches_id_list]
             matches_data = await asyncio.gather(*[riot_client.get(f"https://{quote(config.REGIONAL_HOST["eu"])}.api.riotgames.com/lol/"

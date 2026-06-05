@@ -189,7 +189,6 @@ async def get_player_matches(puuid: str, db: AsyncSession) -> PlayerLastMatchesR
                                                                                                    position=player_match.team_position,
                                                                                                    cs=player_match.creep_score,
                                                                                                    damage_to_champions=player_match.damage)))
-    print(len(player_matches_list_schemas)) # для дебага
     return PlayerLastMatchesResponse(matches=player_matches_list_schemas)
 
 # функция для получения матча по match_id и его игроков

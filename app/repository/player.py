@@ -21,6 +21,11 @@ async def get_player_by_puuid(puuid: str, db: AsyncSession) -> Player | None:
 # создание нового игрока в БД или обновление профиля игрока в БД
 async def create_player(player_account_data: dict, player_summoner_data: dict, db: AsyncSession):
     count_matches = (await db.execute(select(func.count(MatchParticipant.puuid)).where(MatchParticipant.puuid == player_account_data["puuid"]))).scalar()
+    last_fresh_match_id = await get_player_matches(player_account_data["puuid"], db)
+    if not last_fresh_match_id:
+        last_fresh_match_id = None
+    else:
+        last_fresh_match_id = last_fresh_match_id[-1].match_id
     stmt = insert(Player).values(puuid=player_account_data["puuid"], 
                                  game_name=player_account_data["gameName"],
                                  tag_line=player_account_data["tagLine"],
@@ -28,14 +33,16 @@ async def create_player(player_account_data: dict, player_summoner_data: dict, d
                                  summoner_lvl=player_summoner_data["summonerLevel"],
                                  region=player_summoner_data["region"],
                                  raw_json=player_account_data | player_summoner_data,
-                                 count_matches=count_matches)
+                                 count_matches=count_matches,
+                                 last_fresh_match_id=last_fresh_match_id)
     stmt = stmt.on_conflict_do_update(index_elements=["puuid"], set_={"game_name": player_account_data["gameName"],
-                                                                     "tag_line": player_account_data["tagLine"],
-                                                                     "profile_icon_id": player_summoner_data["profileIconId"],
-                                                                     "summoner_lvl": player_summoner_data["summonerLevel"],
-                                                                     "region": player_summoner_data["region"],
-                                                                     "raw_json": player_account_data | player_summoner_data,
-                                                                     "count_matches": count_matches})
+                                                                      "tag_line": player_account_data["tagLine"],
+                                                                      "profile_icon_id": player_summoner_data["profileIconId"],
+                                                                      "summoner_lvl": player_summoner_data["summonerLevel"],
+                                                                      "region": player_summoner_data["region"],
+                                                                      "raw_json": player_account_data | player_summoner_data,
+                                                                      "count_matches": count_matches,
+                                                                      "last_fresh_match_id": func.coalesce(Player.last_fresh_match_id, last_fresh_match_id)})
     await db.execute(stmt)
     await db.commit()
 
