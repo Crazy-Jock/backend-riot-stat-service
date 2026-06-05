@@ -18,6 +18,7 @@ class Player(Base):
     region: Mapped[str] =  mapped_column(String(32))
     count_matches: Mapped[int] = mapped_column(Integer)
     backfill_complete: Mapped[bool] = mapped_column(default=False)
+    last_fresh_match_id: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)) # хранится, как timestamptz
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), 

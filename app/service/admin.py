@@ -18,7 +18,7 @@ async def sync_player_by_puuid(puuid: str, db: AsyncSession):
 
 # функция синхронизации последних count матчей игрока по puuid
 async def sync_player_matches_by_puuid(puuid: str, count: int, db: AsyncSession):
-    await sync_service.sync_player_matches_by_puuid(puuid, count, db)
+    result = await sync_service.sync_player_matches_by_puuid(puuid, count, db)
 
-    return{"message": f"Успешная синхронизация {count} матчей игрока",
+    return{"message": f"Успешная синхронизация {result} матчей игрока",
            "puuid": puuid}

@@ -43,6 +43,7 @@ def upgrade() -> None:
     sa.Column('region', sa.String(length=32), nullable=False),
     sa.Column('count_matches', sa.Integer(), nullable=False),
     sa.Column('backfill_complete', sa.Boolean(), nullable=False),
+    sa.Column('last_fresh_match_id', sa.String(length=64), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('raw_json', sa.JSON(), nullable=True),
